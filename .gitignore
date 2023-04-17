@@ -1,0 +1,4 @@
+POST/*
+__pycache__
+*.html
+tools/chromedriver
