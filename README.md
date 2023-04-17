@@ -12,7 +12,7 @@ comment and image will write to list
 
 Clone the project 
 
-`git clone `
+`git clone https://github.com/fiamma66/Crawler_FB`
 
 Cd to working directory
 
