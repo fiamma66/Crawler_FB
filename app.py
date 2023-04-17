@@ -1,4 +1,4 @@
-from src.FaceBookCrawler.openfb import FaceBookCrawler
+from FaceBookCrawler.openfb import FaceBookCrawler
 import sys
 import shutil
 
@@ -21,13 +21,14 @@ if __name__ == '__main__':
     else:
         pwd = None
 
-    if not shutil.which('../../tools/chromedriver'):
-        exe_path = '../../tools/chromedriver/chromedriver'
+    if not shutil.which('tools/chromedriver'):
+        exe_path = 'tools/chromedriver/chromedriver'
+    else:
+        exe_path = None
 
-    print(f'Account : {account}')
-    print(f'PWD : {pwd}')
-
-    fb = FaceBookCrawler(url='https://www.facebook.com/groups/1260448967306807'
-                         , userid=account, passwd=pwd
+    fb = FaceBookCrawler(url='https://www.facebook.com/groups/1260448967306807',
+                         userid=account, passwd=pwd,
+                         log_config='logging.conf',
+                         path=exe_path
                          )
     fb.start()
