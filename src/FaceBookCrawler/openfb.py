@@ -7,13 +7,13 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver import ActionChains
 from selenium.common.exceptions import NoSuchElementException
 from selenium.common.exceptions import ElementNotInteractableException
+from selenium.webdriver.common.keys import Keys
 from logging import getLogger
 import logging
 import pathlib
 import re
 import time
 import logging.config
-
 
 logger = getLogger('root')
 logger.setLevel(logging.INFO)
@@ -60,7 +60,7 @@ class FaceBookCrawler:
     )
     IMAGE_CLASS_SELECTOR = 'div[class="x6ikm8r x10wlt62 x10l6tqk"]'
     IMAGE_IMG_SELECTOR = (
-        'img[class="x1ey2m1c xds687c x5yr21d x10l6tqk ' 
+        'img[class="x1ey2m1c xds687c x5yr21d x10l6tqk '
         'x17qophe x13vifvy xh8yej3"]'
     )
     SINGLE_IMAGE_IMG_SELECTOR = (
@@ -102,28 +102,13 @@ class FaceBookCrawler:
         'xt0b8zv xo1l8bm"]'
     )
 
-    POST_BODY_SELECTOR = (
-        "span.x193iq5w.xeuugli.x13faqbe.x1vvkbs.xlh3980"
-        ".xvmahel.x1n0sxbx.x1lliihq.x1s928wv.xhkezso"
-        ".x1gmr53x.x1cpjm7i.x1fgarty.x1943h6x.x4zkp8e"
-        ".x3x7a5m.x6prxxf.xvq8zen.xo1l8bm.xzsf02u"
-    )
     POST_BODY_SELECTOR_REFILL = (
-        'div[class="x1iorvi4 x1pi30zi x1l90r2v '
-        'x1swvt13"] > span[class="x193iq5w xeuugli '
-        "x13faqbe x1vvkbs xlh3980 xvmahel x1n0sxbx "
-        "x1lliihq x1s928wv xhkezso x1gmr53x x1cpjm7i "
-        "x1fgarty x1943h6x x4zkp8e x3x7a5m x6prxxf "
-        'xvq8zen xo1l8bm xzsf02u"]'
+        'div[class*="x1iorvi4 x1pi30zi"]'
     )
-    POST_BODY_SELECTOR_LOGON_MODE = (
-        'span[class="x193iq5w xeuugli x13faqbe '
-        "x1vvkbs xlh3980 xvmahel x1n0sxbx "
-        "x1lliihq x1s928wv xhkezso x1gmr53x "
-        "x1cpjm7i x1fgarty x1943h6x x4zkp8e "
-        "x3x7a5m x6prxxf xvq8zen xo1l8bm xzsf02u "
-        'x1yc453h"]'
+    TEXT_BODY_SELECTOR_REFILL = (
+        'div[class="x1e56ztr"]'
     )
+
     POST_COMMENT_BLOCK_SELECTOR = (
         'div[class="x168nmei x13lgxp2 x30kzoy '
         'x9jhf4c x6ikm8r x10wlt62"] > div > div['
@@ -145,7 +130,7 @@ class FaceBookCrawler:
         'xt0b8zv"]'
     )
     POST_COMMENT_MORE_SELECTOR_LOGON_MODE = (
-        'div[class="x168nmei x13lgxp2 ' "x30kzoy x9jhf4c x6ikm8r " 'x10wlt62"]'
+        'div[class="x168nmei x13lgxp2 x30kzoy x9jhf4c x6ikm8r x10wlt62"]'
     )
     POST_COMMENT_BLOCK_SELECTOR_LOGON_MODE = (
         'div[class="x168nmei x13lgxp2 '
@@ -158,24 +143,26 @@ class FaceBookCrawler:
     )
 
     POST_AUTHOR_AREA_SELECTOR = (
-        'span[class="x193iq5w xeuugli x13faqbe '
-        "x1vvkbs xlh3980 xvmahel x1n0sxbx x1lliihq "
-        "x1s928wv xhkezso x1gmr53x x1cpjm7i x1fgarty "
-        "x1943h6x x4zkp8e x3x7a5m x6prxxf xvq8zen "
-        'xo1l8bm xi81zsa x1yc453h"]'
+        'div[class="xu06os2 x1ok221b"]'
     )
     POST_AUTHOR_TEXT_SELECTOR = "strong > span"
 
-    BODY_TEXT_SELECTOR = 'div[dir="auto"]'
+    TEXT_BODY_SELECTOR = (
+        'div[class="xu06os2 x1ok221b"]'
+    )
+
+    COMMENT_TEXT_SELECTOR = (
+        'div[class="x1lliihq xjkvuk6 x1iorvi4"]'
+    )
 
     def __init__(
-        self,
-        url,
-        userid=None,
-        passwd=None,
-        path="./chromedriver/chromedriver",
-        output_dir="./POST",
-        log_config='./logging.conf',
+            self,
+            url,
+            userid=None,
+            passwd=None,
+            path="./chromedriver/chromedriver",
+            output_dir="./POST",
+            log_config='./logging.conf',
     ):
         self.url = url
         self.userid = userid
@@ -185,7 +172,7 @@ class FaceBookCrawler:
         self.option = ChromeOptions()
         logging.config.fileConfig(log_config)
         self.logger = logging.getLogger(__name__)
-        self.logger.setLevel(logging.INFO)
+        self.logger.setLevel(logging.DEBUG)
 
         if self.userid and self.passwd:
             self.logon_mode = True
@@ -195,7 +182,7 @@ class FaceBookCrawler:
         # Testing Option
         self.option.add_argument("--lang=en-us")
         # Full Screen
-        self.option.add_argument("window-size=1920x1080")
+        self.option.add_argument("window-size=1920,1080")
         self.option.add_experimental_option("detach", True)
         prefs = {"profile.default_content_setting_values.notifications": 2}
         self.option.add_experimental_option("prefs", prefs)
@@ -203,9 +190,12 @@ class FaceBookCrawler:
         # prefs = {"profile.managed_default_content_settings.images": 2}
         # self.option.add_experimental_option('prefs', prefs)
 
-        self.driver = webdriver.Chrome(
-            executable_path=self.exe, chrome_options=self.option
-        )
+        if self.exe:
+            self.driver = webdriver.Chrome(
+                executable_path=self.exe, chrome_options=self.option
+            )
+        else:
+            self.driver = webdriver.Chrome(chrome_options=self.option)
 
     def open_and_wait(self):
         self.driver.get(self.url)
@@ -214,7 +204,7 @@ class FaceBookCrawler:
             post_element = EC.presence_of_element_located(
                 (By.CSS_SELECTOR, self.POST_BLOCK_SELECTOR)
             )
-            WebDriverWait(self.driver, timeout=self.TIMEOUT)\
+            WebDriverWait(self.driver, timeout=self.TIMEOUT) \
                 .until(post_element)
 
         except TimeoutException:
@@ -223,16 +213,16 @@ class FaceBookCrawler:
     def login(self):
         if not self.logon_mode:
             return
-        self.driver.find_element(By.CSS_SELECTOR, 'input[name="email"]')\
+        self.driver.find_element(By.CSS_SELECTOR, 'input[name="email"]') \
             .send_keys(self.userid)
-        self.driver.find_element(By.CSS_SELECTOR, 'input[name="pass"]').\
+        self.driver.find_element(By.CSS_SELECTOR, 'input[name="pass"]'). \
             send_keys(self.passwd)
         self.driver.find_element(By.CSS_SELECTOR, self.LOGON_SELECTOR).click()
         try:
             post_element = EC.presence_of_element_located(
                 (By.CSS_SELECTOR, self.POST_BLOCK_SELECTOR)
             )
-            WebDriverWait(self.driver, timeout=self.LOGON_TIME)\
+            WebDriverWait(self.driver, timeout=self.LOGON_TIME) \
                 .until(post_element)
         except TimeoutException:
             self.logger.error("Over Time ! Check Network Condition")
@@ -308,12 +298,12 @@ class FaceBookCrawler:
         """
         if not self.logon_mode:
             if (
-                len(
-                    element.find_elements(
-                        By.CSS_SELECTOR, self.POST_COMMENT_BLOCK_SELECTOR
+                    len(
+                        element.find_elements(
+                            By.CSS_SELECTOR, self.POST_COMMENT_BLOCK_SELECTOR
+                        )
                     )
-                )
-                > 0
+                    > 0
             ):
                 comment_area = element.find_element(
                     By.CSS_SELECTOR, self.POST_COMMENT_BLOCK_SELECTOR
@@ -324,7 +314,7 @@ class FaceBookCrawler:
 
             for i in range(self.COMMENT_DEEP_COUNT):
                 for button in comment_area.find_elements(
-                    By.CSS_SELECTOR, self.LOAD_REPLY_MORE_SELECTOR
+                        By.CSS_SELECTOR, self.LOAD_REPLY_MORE_SELECTOR
                 ):
                     if "隱藏" in button.text or "Hide" in button.text:
                         continue
@@ -335,12 +325,13 @@ class FaceBookCrawler:
         else:
             # Logon Mode
             if (
-                len(
-                    element.find_elements(
-                        By.CSS_SELECTOR, self.POST_COMMENT_LIST_SELECTOR_L_MODE
+                    len(
+                        element.find_elements(
+                            By.CSS_SELECTOR,
+                            self.POST_COMMENT_LIST_SELECTOR_L_MODE
+                        )
                     )
-                )
-                > 0
+                    > 0
             ):
                 float_button = element.find_elements(
                     By.CSS_SELECTOR, self.POST_COMMENT_LIST_SELECTOR_L_MODE
@@ -365,7 +356,7 @@ class FaceBookCrawler:
                     float_window = float_windows[0]
                     for i in range(self.COMMENT_DEEP_COUNT):
                         for button in float_window.find_elements(
-                            By.CSS_SELECTOR, self.LOAD_REPLY_MORE_SELECTOR
+                                By.CSS_SELECTOR, self.LOAD_REPLY_MORE_SELECTOR
                         ):
                             if "隱藏" in button.text or "Hide" in button.text:
                                 continue
@@ -376,13 +367,13 @@ class FaceBookCrawler:
                     # Low Comment, Can't Use Float Windows
                     self.logger.warning("Float Windows Not Appear !")
                     if (
-                        len(
-                            element.find_elements(
-                                By.CSS_SELECTOR,
-                                self.POST_COMMENT_BLOCK_SELECTOR
+                            len(
+                                element.find_elements(
+                                    By.CSS_SELECTOR,
+                                    self.POST_COMMENT_BLOCK_SELECTOR
+                                )
                             )
-                        )
-                        > 0
+                            > 0
                     ):
                         comment_area = element.find_element(
                             By.CSS_SELECTOR, self.POST_COMMENT_BLOCK_SELECTOR
@@ -393,7 +384,7 @@ class FaceBookCrawler:
 
                     for i in range(self.COMMENT_DEEP_COUNT):
                         for button in comment_area.find_elements(
-                            By.CSS_SELECTOR, self.LOAD_REPLY_MORE_SELECTOR
+                                By.CSS_SELECTOR, self.LOAD_REPLY_MORE_SELECTOR
                         ):
                             if "隱藏" in button.text or "Hide" in button.text:
                                 continue
@@ -435,21 +426,22 @@ class FaceBookCrawler:
         if not comment_area:
             return comment_pocket
         comment_li = comment_area.find_elements(
-            By.CSS_SELECTOR, self.POST_BODY_SELECTOR
+            By.CSS_SELECTOR, self.COMMENT_TEXT_SELECTOR
         )
         for comment in comment_li:
             comment_pocket.append(comment.text)
             # print("Appending Comment %s" % li.text)
 
         if self.logon_mode and button:
-            self._click(button)
+            ActionChains(self.driver).send_keys(Keys.ESCAPE).perform()
             time.sleep(self.SCROLL_PAUSE_TIME)
 
         return comment_pocket
 
     def grab_post(self):
         for i, every_post in enumerate(
-            self.driver.find_elements(By.CSS_SELECTOR, self.POST_BLOCK_SELECTOR)
+                self.driver.find_elements(By.CSS_SELECTOR,
+                                          self.POST_BLOCK_SELECTOR)
         ):
             if self.POST_COUNTER > i:
                 continue
@@ -466,14 +458,14 @@ class FaceBookCrawler:
                 By.CSS_SELECTOR, self.POST_ID_SELECTOR
             )
             if (
-                len(post_id_elemnts)
-                > 0
+                    len(post_id_elemnts)
+                    > 0
             ):
                 try:
                     ec = EC.element_to_be_clickable(
                         (By.CSS_SELECTOR, self.POST_ID_LOCATE_SELECTOR)
                     )
-                    WebDriverWait(self.driver, timeout=self.WAIT_ACTIVE_TIME).\
+                    WebDriverWait(self.driver, timeout=self.WAIT_ACTIVE_TIME). \
                         until(ec)
                     ActionChains(self.driver).move_to_element(
                         every_post.find_elements(
@@ -495,57 +487,42 @@ class FaceBookCrawler:
                     postid = "{} - {}".format(i, time.time())
             else:
                 self.logger.error(f"Cant Select postID, Check POST {i}")
-                continue
+                postid = "{} - {}".format(i, time.time())
 
             if (
-                self.logon_mode
-                and len(
+                    self.logon_mode
+                    and len(
                     every_post.find_elements(
-                        By.CSS_SELECTOR, self.POST_BODY_SELECTOR_LOGON_MODE
+                        By.CSS_SELECTOR, self.TEXT_BODY_SELECTOR
+                        )
                     )
-                )
-                > 0
+                    > 0
             ):
-                text_body = every_post.find_element(
-                    By.CSS_SELECTOR, self.POST_BODY_SELECTOR_LOGON_MODE
-                )
-            elif (
-                len(
-                    every_post.find_elements(
-                        By.CSS_SELECTOR, self.POST_BODY_SELECTOR_LOGON_MODE
-                    )
-                )
-                > 0
-            ):
-                text_body = every_post.find_element(
-                    By.CSS_SELECTOR, self.POST_BODY_SELECTOR_LOGON_MODE
-                )
-            elif (
-                len(
-                    every_post.find_elements(
-                        By.CSS_SELECTOR, self.POST_BODY_SELECTOR
-                    )
-                )
-                > 0
-            ):
-                text_body = every_post.find_element(
-                    By.CSS_SELECTOR, self.POST_BODY_SELECTOR
-                )
-            else:
-                self.logger.warning(f"Post has not body : {postid}")
-                continue
+                text_body = every_post.find_elements(
+                    By.CSS_SELECTOR, self.TEXT_BODY_SELECTOR
+                )[2]
 
-            if not str.strip(text_body.text):
-                self.logger.warning("Refill Post Body")
-                text_body = every_post.find_element(
-                    By.CSS_SELECTOR, self.POST_BODY_SELECTOR_REFILL
-                )
-                self.logger.debug(text_body.get_attribute("innerHTML"))
-                self.click_see_more(text_body)
+                if not str.strip(text_body.text):
+                    self.logger.warning("Refill Post Body")
+                    text_body_first = every_post.find_element(
+                        By.CSS_SELECTOR, self.POST_BODY_SELECTOR_REFILL
+                    )
+                    text_body_child = text_body_first.find_element(
+                        By.CSS_SELECTOR, self.TEXT_BODY_SELECTOR_REFILL
+                    )
+                    # Find Parent Element
+                    text_body = text_body_child.find_element(
+                        By.XPATH, '..'
+                    )
+                    self.logger.debug(text_body.get_attribute("innerHTML"))
+                    self.click_see_more(text_body)
+                else:
+                    self.click_see_more(text_body)
+
             else:
-                self.click_see_more(text_body)
+                text_body = None
+
             self.logger.debug(f"POST ID is {postid}")
-            # Body
 
             _author = every_post.find_element(
                 By.CSS_SELECTOR, self.POST_AUTHOR_AREA_SELECTOR
@@ -554,8 +531,12 @@ class FaceBookCrawler:
                 By.CSS_SELECTOR, self.POST_AUTHOR_TEXT_SELECTOR
             ).text
             self.logger.debug(f"Author is {author}")
-            content = text_body.text
-            self.logger.debug(f"Body text {text_body.text}")
+            if text_body:
+                content = text_body.text
+                self.logger.debug(f"Body text {text_body.text}")
+            else:
+                self.logger.warning('No Body Content')
+                content = None
 
             image_pocket = self.grab_image(every_post)
             self.logger.debug(f"Image List : {image_pocket}")
