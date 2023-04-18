@@ -109,6 +109,10 @@ class FaceBookCrawler:
         'div[class="x1e56ztr"]'
     )
 
+    TEXT_BODY_SPECIAL_CHAR_SELECTOR = (
+        'div[class="x1iorvi4 x1pi30zi x1l90r2v x1swvt13"]'
+    )
+
     POST_COMMENT_BLOCK_SELECTOR = (
         'div[class="x168nmei x13lgxp2 x30kzoy '
         'x9jhf4c x6ikm8r x10wlt62"] > div > div['
@@ -172,7 +176,7 @@ class FaceBookCrawler:
         self.option = ChromeOptions()
         logging.config.fileConfig(log_config)
         self.logger = logging.getLogger(__name__)
-        self.logger.setLevel(logging.DEBUG)
+        self.logger.setLevel(logging.INFO)
 
         if self.userid and self.passwd:
             self.logon_mode = True
@@ -249,6 +253,16 @@ class FaceBookCrawler:
             f.write(f"CONTENT={content}\n")
             f.write(f"IMGLIST={img_list}\n")
             f.write(f"COMMENTLIST={comment_list}\n")
+
+    def grab_special_char_body(self, element):
+        """
+
+        :param element: every post element
+        :return: text body element
+        """
+        return element.find_element(
+            By.CSS_SELECTOR, self.TEXT_BODY_SPECIAL_CHAR_SELECTOR
+        )
 
     def grab_image(self, element):
         """
@@ -450,7 +464,18 @@ class FaceBookCrawler:
 
             self.logger.info(f"===========  POST {i}  ================")
 
-            ActionChains(self.driver).scroll_to_element(every_post).perform()
+            try:
+                ActionChains(self.driver).scroll_to_element(every_post)\
+                    .perform()
+            except ElementNotInteractableException:
+                # Prevent Stack on flow windows
+                ActionChains(self.driver).send_keys(Keys.ESCAPE).perform()
+                time.sleep(self.SCROLL_PAUSE_TIME)
+                ActionChains(self.driver).send_keys(Keys.ESCAPE).perform()
+                time.sleep(self.SCROLL_PAUSE_TIME)
+                ActionChains(self.driver).scroll_to_element(every_post) \
+                    .perform()
+
             time.sleep(self.SCROLL_PAUSE_TIME)
 
             # Check Post ID
@@ -507,13 +532,16 @@ class FaceBookCrawler:
                     text_body_first = every_post.find_element(
                         By.CSS_SELECTOR, self.POST_BODY_SELECTOR_REFILL
                     )
-                    text_body_child = text_body_first.find_element(
+                    text_body_childs = text_body_first.find_elements(
                         By.CSS_SELECTOR, self.TEXT_BODY_SELECTOR_REFILL
                     )
                     # Find Parent Element
-                    text_body = text_body_child.find_element(
-                        By.XPATH, '..'
-                    )
+                    if len(text_body_childs) > 0:
+                        text_body = text_body_childs[0].find_element(
+                            By.XPATH, '..'
+                        )
+                    else:
+                        text_body = self.grab_special_char_body(every_post)
                     self.logger.debug(text_body.get_attribute("innerHTML"))
                     self.click_see_more(text_body)
                 else:
