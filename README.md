@@ -1,6 +1,6 @@
 # FB Crawler - Base on Selenium Chrome
 
-------
+
 
 Crawl FB Group every post content & comment
 write to file in POST folder (create if not exists)
@@ -9,11 +9,10 @@ comment and image will write to list
 
 ## Getting Started
 
------
 
 Clone the project 
 
-`git clone `
+`git clone https://github.com/fiamma66/Crawler_FB`
 
 Cd to working directory
 
@@ -21,7 +20,7 @@ Cd to working directory
 
 ## Prerequisites
 
-----
+
 
 Need to use pipenv to install
 
@@ -37,8 +36,6 @@ Activate pipenv
 
 ## Installing
 
----
-
 Simply Install with setup.py
 
 `python3 setup.py install --record files.txt`
@@ -47,14 +44,12 @@ Simply Install with setup.py
 
 ## Running Test
 
----
 
 ### Prepare Testing 
 
 1. prepare Facebook Account that can log in
 2. prepare chromedriver - either place it into tools or use it as env
 
----
 
 #### Prepare Account Prop
 ```properties
@@ -62,7 +57,6 @@ ACCOUNT=example@mail.com
 PASSWORD=example
 ```
 
----
 
 #### Prepare Chromedriver as env
 
@@ -84,18 +78,15 @@ cp chromedriver /usr/bin/local/
 which chromedriver
 ```
 
----
 
 ### Run test without install
 
----
 
 Can simply run testing without install
 
 `python3 -m tests.DEV_CrawlerTest.main`
 
 
----
 
 Run test after install
 
