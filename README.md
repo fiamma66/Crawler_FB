@@ -22,7 +22,9 @@ Cd to working directory
 
 
 
-Need to use pipenv to install
+Need to use pipenv and pyenv(option) to install
+
+`pyenv install 3.7.9`
 
 `pip install pipenv`
 
@@ -84,14 +86,19 @@ which chromedriver
 
 Can simply run testing without install
 
-`python3 -m tests.DEV_CrawlerTest.main`
+`python -m tests.DEV_CrawlerTest.main`
 
 
 
-Run test after install
+### Run after install
+
+Test install
+`python -c 'from FaceBookCrawler.openfb import FaceBookCrawler'`
+
+Start crawler
 
 ```shell
-python3 app.py
+python app.py
 ```
 
 ---
