@@ -5,7 +5,7 @@ import shutil
 if __name__ == '__main__':
 
     # Get Account prop
-    with open('../../Account.prop', 'r') as f:
+    with open('Account.prop', 'r') as f:
         prop = f.read().splitlines()
 
     if not prop:
@@ -22,13 +22,13 @@ if __name__ == '__main__':
         pwd = None
 
     if not shutil.which('chromedriver'):
-        exe_path = '../../tools/chromedriver/chromedriver'
+        exe_path = 'tools/chromedriver/chromedriver'
     else:
         exe_path = None
 
     fb = FaceBookCrawler(url='https://www.facebook.com/groups/1260448967306807',
                          userid=account, passwd=pwd,
-                         log_config='../../logging.conf',
+                         log_config='logging.conf',
                          path=exe_path
                          )
     fb.start()
