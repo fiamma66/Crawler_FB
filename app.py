@@ -12,14 +12,10 @@ if __name__ == '__main__':
         print('No prop file Defined !')
         sys.exit(1)
 
-    if len(prop[0].split('ACCOUNT=')) > 1:
-        account = prop[0].split('ACCOUNT=')[1]
-    else:
-        account = None
-    if len(prop[1].split('PASSWORD=')) > 1:
-        pwd = prop[1].split('PASSWORD=')[1]
-    else:
-        pwd = None
+    properties = {}
+    for p in prop:
+        splited_p = p.split('=')
+        properties[splited_p[0].upper()] = splited_p[1]
 
     if not shutil.which('tools/chromedriver'):
         exe_path = 'tools/chromedriver/chromedriver'
@@ -27,8 +23,10 @@ if __name__ == '__main__':
         exe_path = None
 
     fb = FaceBookCrawler(url='https://www.facebook.com/groups/1260448967306807',
-                         userid=account, passwd=pwd,
+                         userid=properties.get('ACCOUNT'),
+                         passwd=properties.get('PASSWORD'),
                          log_config='logging.conf',
                          path=exe_path
                          )
+    fb.COMMENT_DEEP_COUNT = 0
     fb.start()
