@@ -36,6 +36,19 @@ class FaceBookCrawler:
 
     Class Build By Parsing Url in
     Using Class Method crawl to start crawl
+    Default Value Can overwrite By FaceBookCrawler.DEFAULT_VALUE=VALUE
+    List of Default Value:
+        COMMENT_DEEP_COUNT : How deep when loading more comment , Default is 4
+        LOGON_TIME         : How long the login should wait, Default is 10 sec
+        WAIT_ACTIVE_TIME   : How long should wait unitl element can interact,
+                             Default is 20 sec
+        TIMEOUT            : How long the browser should wait for page open,
+                             Default is 10 sec
+        SCROLL_PAUSE_TIME  : How long should wait between every scroll,
+                             Default is 2 sec
+        POST_COUNTER       : Crawler post from the specific number ,
+                             from very first is 0 , first third post is 3,
+                             Default is 0
     """
 
     # Default Value
@@ -47,6 +60,9 @@ class FaceBookCrawler:
     POST_COUNTER = 0
     POST_ID_PATTERN = re.compile(r"https?://.*?/.*?/\d+/posts/(\d+)/\?.*",
                                  re.I)
+    X_SELECTOR = (
+        'i[class="x1b0d499 xaj1gnb"]'
+    )
     LOGON_SELECTOR = (
         'div[class="x1i10hfl x1qjc9v5 xjqpnuy xa49m3k xqeqjp1 '
         "x2hbi6w x13fuv20 xu3j5b3 x1q0q8m5 x26u7qi x972fbf "
@@ -202,6 +218,10 @@ class FaceBookCrawler:
             self.driver = webdriver.Chrome(chrome_options=self.option)
 
     def open_and_wait(self):
+        """
+        Method to open webpage
+        :return: webpage driver object
+        """
         self.driver.get(self.url)
 
         try:
@@ -215,6 +235,10 @@ class FaceBookCrawler:
             self.logger.error("Over Time ! Check Network Condition")
 
     def login(self):
+        """
+        Method to logon
+        :return:
+        """
         if not self.logon_mode:
             return
         self.driver.find_element(By.CSS_SELECTOR, 'input[name="email"]') \
@@ -453,6 +477,10 @@ class FaceBookCrawler:
         return comment_pocket
 
     def grab_post(self):
+        """
+        Crawl every post on the webpage
+        :return:
+        """
         for i, every_post in enumerate(
                 self.driver.find_elements(By.CSS_SELECTOR,
                                           self.POST_BLOCK_SELECTOR)
@@ -469,12 +497,12 @@ class FaceBookCrawler:
                     .perform()
             except ElementNotInteractableException:
                 # Prevent Stack on flow windows
+                middle = self.driver.find_elements(
+                    By.CSS_SELECTOR, self.X_SELECTOR
+                )
+                if len(middle) > 0:
+                    self._click(middle[0])
                 ActionChains(self.driver).send_keys(Keys.ESCAPE).perform()
-                time.sleep(self.SCROLL_PAUSE_TIME)
-                ActionChains(self.driver).send_keys(Keys.ESCAPE).perform()
-                time.sleep(self.SCROLL_PAUSE_TIME)
-                ActionChains(self.driver).scroll_to_element(every_post) \
-                    .perform()
 
             time.sleep(self.SCROLL_PAUSE_TIME)
 
@@ -595,6 +623,10 @@ class FaceBookCrawler:
         return self.driver.execute_script("return document.body.scrollHeight")
 
     def start(self):
+        """
+        Starting FaceBookCrawler
+        :return:
+        """
         self.open_and_wait()
         self.login()
         time.sleep(self.LOGON_TIME)
